@@ -1,0 +1,10 @@
+### Create Profile
+POST http://localhost:8080/profiles
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "userType": "admin",
+  "region": "EU",
+  "tier": "premium"
+}

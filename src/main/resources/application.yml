@@ -1,0 +1,97 @@
+#OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:9411/api/v2/spans   # Zipkin OTLP-compatible endpoint
+
+OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces   # <- Uncomment when switching to Jaeger / Tempo
+
+# ===============================
+# === Spring Application Info ===
+# ===============================
+
+spring:
+  application:
+    name: profile-observability-poc
+    org: mycompany                   # Custom org tag for metrics/tracing
+  profiles:
+    default: local
+
+  # ================================
+  # === Database Configuration ====
+  # ================================
+
+  datasource:
+    url: jdbc:h2:mem:profiledb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true                   # Enable the H2 web console
+      path: /h2-console               # Access at /h2-console
+
+# ================================
+# === Observability Settings ====
+# ================================
+
+management:
+
+  # === Distributed Tracing ===
+  tracing:
+    sampling:
+      probability: 1.0               # Lower in prod (e.g., 0.1 or 0.5)
+
+  # === OTLP Tracing Exporter ===
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+
+  # === Observation Global Metadata ===
+  observations:
+    key-values:
+      org: ${spring.application.org}    # Automatically attach 'org' to all observations
+
+  # === Micrometer Metrics Configuration ===
+  metrics:
+
+    # Global tags for every metric (these will appear in Prometheus)
+    tags:
+      application: ${spring.application.name}
+      org: ${spring.application.org}
+      type: poc
+
+    # Enable HTTP request duration histogram (gives p90, p95, p99 percentiles)
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+  # === Prometheus Export Settings ===
+  prometheus:
+    metrics:
+      export:
+        step: 10s  # Prometheus will scrape data every 10s (match Prometheus scrape interval)
+
+  # === Actuator Web Endpoints ===
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  # === Actuator Endpoint Configuration ===
+  endpoint:
+    health:
+      show-details: always    # Show component-level health (DB, disk space, etc.)
+    env:
+      show-values: always     # Show property values in /actuator/env (useful for debugging)
+
+  # === Actuator Info Contributor ===
+  info:
+    env:
+      enabled: true           # Show env info under /actuator/info
+    java:
+      enabled: true           # Show JVM details under /actuator/info
+    os:
+      enabled: true           # Show OS details under /actuator/info

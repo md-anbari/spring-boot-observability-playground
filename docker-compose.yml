@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+  # === Zipkin ===
+  zipkin:
+    image: openzipkin/zipkin:latest
+    ports:
+      - "9411:9411"   # Zipkin UI: http://localhost:9411
+    networks:
+      - observability
+
+  # === Jaeger ===
+  jaeger:
+    image: jaegertracing/all-in-one:1.54
+    ports:
+      - "16686:16686"   # Jaeger UI: http://localhost:16686
+      - "4317:4317"     # OTLP gRPC receiver
+      - "4318:4318"     # OTLP HTTP receiver (for OpenTelemetry SDKs)
+    networks:
+      - observability
+
+  # === Prometheus ===
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"   # Prometheus UI: http://localhost:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml   # Mount prometheus.yml configuration
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge

@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 10s   # Match this with Spring's prometheus step in application.yml
+
+scrape_configs:
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'   # Endpoint exposing metrics
+    static_configs:
+      - targets: ['host.docker.internal:8080']   # Access the app on the host
